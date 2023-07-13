@@ -1,18 +1,43 @@
 import datetime as dt
 
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
-from posts.models import Group, Post
+from posts.models import Follow, Group, Post
 
 from .permissions import IsAuthor
-from .serializers import CommentSerializer, GroupSerializer, PostSerializer
+from .serializers import (
+    CommentSerializer,
+    FollowSerializer,
+    GroupSerializer,
+    PostSerializer,
+)
+from .viewsets import CreateRetrieveViewSet
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+
+
+class FollowViewSet(CreateRetrieveViewSet):
+    queryset = Follow.objects.all()
+    serializer_class = FollowSerializer
+    permission_classes = (IsAuthenticated, IsAuthor)
+
+    def get_queryset(self):
+        post_pk = self.kwargs.get("post_id")
+        post = get_object_or_404(Post, pk=post_pk)
+        return post.comments.all()
+
+    def perform_create(self, serializer):
+        post_pk = self.kwargs.get("post_id")
+        serializer.save(
+            author=self.request.user,
+            post=get_object_or_404(Post, pk=post_pk),
+            created=dt.datetime.now,
+        )
 
 
 class PostViewSet(viewsets.ModelViewSet):
