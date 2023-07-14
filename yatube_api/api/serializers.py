@@ -25,13 +25,17 @@ class FollowSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "following")
         validators = [
             UniqueTogetherValidator(
-                queryset=Follow.objects.all(), fields=["user", "following"]
+                queryset=Follow.objects.all(),
+                fields=["user", "following"],
+                message="Вы не можете подписаться на себя",
             )
         ]
 
     def validate(self, data):
         if data["following"] == self.context["request"].user:
-            raise serializers.ValidationError()
+            raise serializers.ValidationError(
+                "Вы не можете подписаться на себя"
+            )
         return data
 
 
