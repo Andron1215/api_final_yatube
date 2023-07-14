@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from posts.models import Follow, Group, Post
 
-from .permissions import IsAuthenticatedOrAuthor
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     CommentSerializer,
     FollowSerializer,
@@ -22,7 +22,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
 
 class FollowViewSet(CreateListViewSet):
     serializer_class = FollowSerializer
-    permission_classes = (IsAuthenticated, IsAuthenticatedOrAuthor)
+    permission_classes = (IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("following__username",)
 
@@ -36,7 +36,7 @@ class FollowViewSet(CreateListViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsAuthenticatedOrAuthor,)
+    permission_classes = (IsAuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
@@ -45,7 +45,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrAuthor,)
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def get_queryset(self):
         post_pk = self.kwargs.get("post_id")
